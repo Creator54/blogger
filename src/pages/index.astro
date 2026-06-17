@@ -1,0 +1,309 @@
+---
+import Layout from '../layouts/Layout.astro';
+const postModules = import.meta.glob('../posts/*.md', { eager: true });
+const posts = Object.entries(postModules).map(([path, post]) => {
+	return {
+		post,
+		slug: path.split('/').pop().replace('.md', '')
+	};
+});
+// Sort posts by date descending, but pin foundational posts to the bottom
+posts.sort((a, b) => {
+	// Pin 'hello-world' to absolute bottom
+	if (a.slug === 'hello-world') return 1;
+	if (b.slug === 'hello-world') return -1;
+	
+	// Pin 'why-minimalism' just above 'hello-world'
+	if (a.slug === 'why-minimalism') return 1;
+	if (b.slug === 'why-minimalism') return -1;
+
+	// Sort everything else organically by date
+	return new Date(b.post.frontmatter.date).valueOf() - new Date(a.post.frontmatter.date).valueOf();
+});
+---
+
+<Layout title="Minimal Blog">
+	<div class="hero-section">
+		<img src="https://avatars.githubusercontent.com/u/34543609?v=4" alt="Creator54" class="hero-avatar">
+		<div class="hero-text">
+			<h1 class="hero-title">Hey, I am Saroj Mahato</h1>
+			<p class="hero-subtitle">SE @ PhonePe Infra | Distributed Systems | Platform Reliability</p>
+		</div>
+	</div>
+
+	<div class="bio-section">
+		<p>Solutions Engineer at PhonePe managing API Gateways, Object Storage, and Observability pipelines. I write about NixOS, Linux, distributed systems, or whatever stuff I'm currently building and tinkering with.</p>
+		<p>
+			Find me on <a href="https://github.com/creator54">GitHub</a> and <a href="https://linkedin.com/in/saroj-kumar-mahato">LinkedIn</a>.
+		</p>
+	</div>
+	
+	<h2>Posts</h2>
+	<ul class="post-list">
+		{posts.map(({post, slug}) => (
+			<li class="post-item">
+				<details name="blog-posts" class="post-accordion" id={slug}>
+					<summary class="post-summary">
+						<div class="post-header">
+							<h3 class="post-title">
+								{post.frontmatter.title}
+								{post.frontmatter.repo && (
+									<a href={`https://github.com/${post.frontmatter.repo}`} target="_blank" class="repo-link" onclick="event.stopPropagation()">
+										github.com/{post.frontmatter.repo}
+									</a>
+								)}
+							</h3>
+							<span class="post-date">{post.frontmatter.date}</span>
+						</div>
+					</summary>
+					<div class="post-content fade-in">
+						<post.Content />
+					</div>
+					<div class="comments-section fade-in" data-post-title={post.frontmatter.title}></div>
+				</details>
+			</li>
+		))}
+	</ul>
+	
+	<style>
+		/* Remove default marker */
+		details > summary {
+			list-style: none;
+		}
+		details > summary::-webkit-details-marker {
+			display: none;
+		}
+		details[open] summary h3 {
+			color: var(--link-hover);
+		}
+		.post-content :global(h1) {
+			display: none; /* Hide the H1 inside the markdown since we use the summary as title */
+		}
+		.post-content :global(.date-span) {
+			display: none; /* Hide any hardcoded date spans in the markdown */
+		}
+		details.post-accordion {
+			scroll-margin-top: 2rem;
+		}
+		.comments-section:not(:empty) {
+			margin-top: 2rem;
+			padding-top: 2rem;
+			border-top: 1px dashed var(--border);
+		}
+
+		/* Component Styles */
+		.hero-section {
+			display: flex;
+			align-items: center;
+			gap: 1.5rem;
+			margin-bottom: 2rem;
+		}
+		.hero-avatar {
+			width: 80px;
+			height: 80px;
+			border-radius: 50%;
+		}
+		.hero-title {
+			margin: 0;
+			font-size: 2rem;
+		}
+		.hero-subtitle {
+			margin: 0;
+			color: var(--meta);
+			font-size: 1.05rem;
+		}
+		.bio-section {
+			margin-bottom: 4rem;
+		}
+		.post-list {
+			list-style-type: none;
+			padding: 0;
+		}
+		.post-item {
+			margin-bottom: 1.5rem;
+			border-bottom: 1px solid var(--border);
+			padding-bottom: 1.5rem;
+		}
+		.post-item:last-child {
+			margin-bottom: 0;
+			border-bottom: none;
+			padding-bottom: 0;
+		}
+		.post-summary {
+			cursor: pointer;
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+			outline: none;
+		}
+		.post-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.post-title {
+			margin: 0;
+			font-weight: 500;
+			font-size: 1.2rem;
+			color: var(--heading);
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+		}
+		details:not([open]) .repo-link {
+			display: none;
+		}
+		details[open] .repo-link {
+			display: inline-block;
+			font-size: 0.85rem;
+			font-family: 'Geist Mono', monospace;
+			color: var(--meta);
+			text-decoration: none;
+			border-bottom: 1px dotted var(--meta);
+		}
+		details[open] .repo-link:hover {
+			color: var(--heading);
+			border-bottom-color: var(--heading);
+		}
+		.post-date {
+			color: var(--meta);
+			font-family: 'Geist Mono', monospace;
+			font-size: 0.85rem;
+		}
+		.post-content {
+			margin-top: 1.5rem;
+			padding-top: 1.5rem;
+			border-top: 1px dashed var(--border);
+		}
+
+		/* Mobile Responsive Adjustments */
+		@media (max-width: 600px) {
+			.hero-section {
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 1rem;
+				margin-bottom: 1.5rem;
+			}
+			.hero-title {
+				font-size: 1.7rem;
+			}
+			.hero-avatar {
+				width: 64px;
+				height: 64px;
+			}
+			.bio-section {
+				margin-bottom: 3rem;
+			}
+			.post-header {
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 0.5rem;
+			}
+			.post-title {
+				font-size: 1.1rem;
+			}
+		}
+	</style>
+
+	<script is:inline>
+		let giscusLoaded = false;
+
+		function loadGiscus(container, term) {
+			let giscusDiv = document.querySelector('.giscus');
+			
+			if (!giscusLoaded) {
+				giscusLoaded = true;
+				
+				// Create the giscus target container
+				giscusDiv = document.createElement('div');
+				giscusDiv.className = 'giscus';
+				container.appendChild(giscusDiv);
+
+				// Inject the script globally once
+				const script = document.createElement('script');
+				script.src = "https://giscus.app/client.js";
+				script.setAttribute("data-repo", "creator54/blogger");
+				script.setAttribute("data-repo-id", "MDEwOlJlcG9zaXRvcnk0MDA1MDIyODY=");
+				script.setAttribute("data-category", "Announcements");
+				script.setAttribute("data-category-id", "DIC_kwDOF98uDs4C_W25");
+				script.setAttribute("data-mapping", "specific");
+				script.setAttribute("data-term", term);
+				script.setAttribute("data-strict", "0");
+				script.setAttribute("data-reactions-enabled", "1");
+				script.setAttribute("data-emit-metadata", "0");
+				script.setAttribute("data-input-position", "bottom");
+				
+				const isDark = document.documentElement.classList.contains('dark') || 
+							   (typeof localStorage !== 'undefined' && localStorage.getItem('theme') === 'dark');
+				script.setAttribute("data-theme", isDark ? 'dark' : 'light');
+				script.setAttribute("data-lang", "en");
+				script.crossOrigin = "anonymous";
+				script.async = true;
+				document.body.appendChild(script);
+			} else {
+				// Move existing giscus div to the new container
+				if (giscusDiv.parentElement !== container) {
+					container.appendChild(giscusDiv);
+				}
+				
+				// Update the term via postMessage so it loads the correct discussion
+				const iframe = document.querySelector('iframe.giscus-frame');
+				if (iframe) {
+					iframe.contentWindow.postMessage({
+						giscus: {
+							setConfig: {
+								term: term
+							}
+						}
+					}, 'https://giscus.app');
+				}
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+			const accordions = document.querySelectorAll('details.post-accordion');
+			accordions.forEach(acc => {
+				acc.addEventListener('toggle', (e) => {
+					if (e.target.open) {
+						// Small timeout to allow the browser to collapse the others first
+						setTimeout(() => {
+							e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						}, 50);
+
+						const commentsContainer = e.target.querySelector('.comments-section');
+						const postTitle = commentsContainer.getAttribute('data-post-title');
+						loadGiscus(commentsContainer, postTitle);
+					}
+				});
+			});
+
+			// Handle direct loads with hash
+			if (window.location.hash) {
+				const targetId = window.location.hash.substring(1);
+				const targetAccordion = document.getElementById(targetId);
+				if (targetAccordion && targetAccordion.tagName === 'DETAILS') {
+					setTimeout(() => {
+						targetAccordion.open = true;
+					}, 100);
+				}
+			}
+		});
+
+		// Handle internal hash links for cross-referencing posts
+		document.addEventListener('click', (e) => {
+			const link = e.target.closest('a');
+			if (link && link.getAttribute('href') && link.getAttribute('href').startsWith('#')) {
+				const targetId = link.getAttribute('href').substring(1);
+				const targetAccordion = document.getElementById(targetId);
+				
+				if (targetAccordion && targetAccordion.tagName === 'DETAILS') {
+					e.preventDefault();
+					targetAccordion.open = true;
+					history.pushState(null, null, `#${targetId}`);
+				}
+			}
+		});
+	</script>
+
+
+</Layout>

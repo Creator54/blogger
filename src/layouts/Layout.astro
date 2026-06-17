@@ -1,0 +1,250 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '@fontsource/geist-sans';
+import '@fontsource/geist-mono';
+
+export interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<ClientRouter />
+	</head>
+	<body>
+		<div class="container fade-in">
+			<header>
+				<nav style="display: flex; justify-content: flex-end; align-items: center; width: 100%;">
+					<button id="theme-toggle" aria-label="Toggle dark mode" style="background: none; border: none; cursor: pointer; color: var(--meta); font-size: 1.2rem; display: flex; align-items: center;">
+						<svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+						</svg>
+					</button>
+				</nav>
+			</header>
+			<main transition:animate="slide">
+				<slot />
+			</main>
+			<footer class="footer">
+				<p>Built with Astro, managed via LLMs, hosted via Nix/NixOS.</p>
+			</footer>
+		</div>
+
+		<script is:inline>
+			const initTheme = () => {
+				const theme = (() => {
+					if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+						return localStorage.getItem('theme');
+					}
+					if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+						return 'dark';
+					}
+					return 'light';
+				})();
+			
+				if (theme === 'light') {
+					document.documentElement.classList.remove('dark');
+					document.documentElement.classList.add('light');
+				} else {
+					document.documentElement.classList.remove('light');
+					document.documentElement.classList.add('dark');
+				}
+			
+				window.localStorage.setItem('theme', theme);
+			
+				const handleToggleClick = () => {
+					const element = document.documentElement;
+					element.classList.toggle('dark');
+					element.classList.toggle('light');
+					
+					const isDark = element.classList.contains('dark');
+					const themeName = isDark ? 'dark' : 'light';
+					localStorage.setItem('theme', themeName);
+
+					const iframes = document.querySelectorAll('.giscus-frame');
+					iframes.forEach(iframe => {
+						iframe.contentWindow.postMessage({ giscus: { setConfig: { theme: themeName } } }, 'https://giscus.app');
+					});
+				}
+			
+				const toggleButton = document.getElementById('theme-toggle');
+				if (toggleButton) {
+					// Use onclick to prevent duplicate listeners across Astro page loads
+					toggleButton.onclick = handleToggleClick;
+				}
+			};
+
+			// Run on initial load
+			initTheme();
+
+			// Run on Astro client-side navigation
+			document.addEventListener('astro:page-load', initTheme);
+		</script>
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		/* Sleek Dark Mode (Default) */
+		--bg: #0a0a0a;
+		--text: #a1a1aa;
+		--heading: #fafafa;
+		--link: #e4e4e7;
+		--link-hover: #ffffff;
+		--border: #27272a;
+		--meta: #52525b;
+		--selection-bg: #3f3f46;
+		--selection-text: #ffffff;
+	}
+
+	html.light {
+		--bg: #fafafa;
+		--text: #52525b;
+		--heading: #18181b;
+		--link: #27272a;
+		--link-hover: #000000;
+		--border: #e4e4e7;
+		--meta: #a1a1aa;
+		--selection-bg: #e4e4e7;
+		--selection-text: #000000;
+	}
+
+	::selection {
+		background: var(--selection-bg);
+		color: var(--selection-text);
+	}
+
+	html {
+		font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+		background-color: var(--bg);
+		color: var(--text);
+		line-height: 1.7;
+		font-size: 16px;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		transition: background-color 0.3s ease, color 0.3s ease;
+	}
+
+	body {
+		margin: 0;
+		padding: 4rem 1.5rem;
+	}
+
+	.container {
+		max-width: 650px;
+		margin: 0 auto;
+	}
+
+	/* Micro-animation: soft fade in on load */
+	.fade-in {
+		animation: fadeIn 0.8s ease-out;
+	}
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(10px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	header {
+		margin-bottom: 4rem;
+	}
+
+	nav {
+		display: flex;
+		gap: 1.5rem;
+	}
+
+	.nav-link {
+		color: var(--meta);
+		text-decoration: none;
+		font-weight: 500;
+		letter-spacing: 0.02em;
+		transition: color 0.2s ease;
+	}
+
+	.nav-link:hover {
+		color: var(--heading);
+	}
+
+	a {
+		color: var(--link);
+		text-decoration: none;
+		border-bottom: 1px solid var(--border);
+		transition: border-color 0.2s ease, color 0.2s ease;
+	}
+
+	a:hover {
+		color: var(--link-hover);
+		border-bottom-color: var(--link-hover);
+	}
+
+	h1, h2, h3, h4 {
+		color: var(--heading);
+		font-weight: 600;
+		line-height: 1.3;
+		letter-spacing: -0.02em;
+		margin-top: 2.5rem;
+		margin-bottom: 1rem;
+	}
+
+	h1 {
+		font-size: 1.75rem;
+		margin-top: 0;
+	}
+
+	h2 { font-size: 1.25rem; }
+	h3 { font-size: 1.1rem; }
+
+	p {
+		margin-bottom: 1.5rem;
+	}
+
+	footer {
+		margin-top: 5rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+		color: var(--meta);
+		font-size: 0.85rem;
+	}
+	
+	footer p { margin: 0; }
+
+	/* Content Responsiveness Fixes */
+	img {
+		max-width: 100%;
+		height: auto;
+		border-radius: 4px;
+	}
+	pre {
+		overflow-x: auto;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+	p code {
+		word-break: break-word;
+	}
+
+	@media (max-width: 600px) {
+		body {
+			padding: 2rem 1.25rem;
+		}
+		header {
+			margin-bottom: 2.5rem;
+		}
+		h1 {
+			font-size: 1.5rem;
+		}
+		footer {
+			margin-top: 3rem;
+		}
+	}
+</style>
