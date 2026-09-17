@@ -70,10 +70,21 @@ async function sync() {
             const data = await fetchRepoData(repo);
             const processedContent = processContent(data.content, repo, data.default_branch);
             
+            const filePath = path.join(POSTS_DIR, `project-${data.name.toLowerCase()}.md`);
+            
+            let publishDate = new Date().toISOString().split('T')[0];
+            if (fs.existsSync(filePath)) {
+                const existing = fs.readFileSync(filePath, 'utf-8');
+                const match = existing.match(/^date:\s*["']?([^"'\r\n]+)["']?/m);
+                if (match) {
+                    publishDate = match[1];
+                }
+            }
+
             // Generate Markdown with frontmatter
             const markdown = `---
 title: "${data.name}"
-date: "${data.updated_at}"
+date: "${publishDate}"
 repo: "${repo}"
 ---
 
@@ -83,7 +94,6 @@ ${processedContent}
 *This post was auto-generated from the [${repo}](https://github.com/${repo}) README. Last updated: ${data.updated_at}.*
 `;
             
-            const filePath = path.join(POSTS_DIR, `project-${data.name.toLowerCase()}.md`);
             fs.writeFileSync(filePath, markdown);
             console.log(`✅ Synced ${repo} to ${filePath}`);
         } catch (err) {
