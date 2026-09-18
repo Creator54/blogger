@@ -48,16 +48,16 @@ Lenovo packages firmware updates as a 7-Zip self-extracting Win32 executable ([`
 
 ## NixOS Power Management Configuration Fix
 
-To eliminate broken `suspend-then-hibernate` on AMD s2idle platforms, configure `services.logind` to enforce direct `suspend` on lid closure:
+To eliminate broken `suspend-then-hibernate` on AMD s2idle platforms, configure `services.logind` to enforce direct `hibernate` on lid closure:
 
 In `hosts/omnix/hibernation.nix`:
 
 ```nix
 services.logind = {
   settings.Login = {
-    HandleLidSwitch = "suspend";
-    HandleLidSwitchDocked = "suspend";
-    HandleLidSwitchExternalPower = "suspend";
+    HandleLidSwitch = "hibernate";
+    HandleLidSwitchDocked = "hibernate";
+    HandleLidSwitchExternalPower = "hibernate";
   };
 };
 ```
